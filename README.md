@@ -2,6 +2,11 @@
 
 An api to store images and tag them
 
+## App
+To run the app: 
+1. Create a `.config.yaml` file with the needed values (see `config.example.yaml`)
+2. Run `docker compose up`
+
 
 ## Database
 

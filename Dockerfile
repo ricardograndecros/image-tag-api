@@ -10,13 +10,13 @@ COPY ./database /opt/database
 COPY ./alembic.ini /opt/alembic.ini
 
 # Set the working directory
-WORKDIR /opt/app
+WORKDIR /opt
 
 # Install the Python dependencies
-RUN python -m pip install -r requirements.txt
+RUN python -m pip install -r app/requirements.txt
 
 # Expose port 8080
 EXPOSE 8080
 
 # Set the command to run when the container starts
-CMD python -m flask --app __init__.py run --host 0.0.0.0 --port 8080 --debug
+CMD python -m flask --app app/__init__.py run --host 0.0.0.0 --port 8080 --debug

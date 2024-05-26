@@ -1,0 +1,11 @@
+base:
+  environment: dev
+  app:
+    logLevel: debug
+    imagesDb:
+      alembicPath: database/migrations
+      driver: "mysql+pymysql"
+      database: Pictures
+      host: localhost
+      port: 3306
+      user: mbit
