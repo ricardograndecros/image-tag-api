@@ -1,0 +1,31 @@
+services:
+  db:
+    image: mysql:8.0
+    restart: always
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: Pictures
+      MYSQL_USER: mbit
+      MYSQL_PASSWORD: mbit
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "--password=root"]
+      start_period: 5s
+      interval: 5s
+      timeout: 5s
+      retries: 3
+    volumes:
+      - ./database-volume:/var/lib/mysql
+  app:
+    build: .
+    ports:
+      - 8080:8080
+    volumes:
+      - type: bind
+        source: .
+        target: /opt/
+    depends_on:
+      db:
+        condition: service_healthy
+    
