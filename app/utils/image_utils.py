@@ -1,16 +1,60 @@
+from ast import Tuple
+from email.mime import image
+import fileinput
+from tkinter import NO
+from typing import Union
 import requests
+from imagekitio import ImageKit
+from sqlalchemy import null
+from ..config.config import ExternalApiConfig
 
-def upload_online_image() -> str:
-    """Stores a image at imagekit.io
+def upload_online_image(config:ExternalApiConfig, image_name:str, image :str) -> Union[str, str, int]:
+    imagekit = ImageKit(
+        public_key=config.api_key,
+        private_key=config.api_secret,
+        url_endpoint=config.api_url
+    )
+    
+    upload_response = imagekit.upload(
+        file=image,
+        file_name=f"{image_name}.jpg",
+    )
 
-    Returns:
-        str: the url where the image was uploaded
-    """
-    pass
+    if upload_response.response_metadata.http_status_code != 200:
+        print("Error uploading file")
+        raise Exception("Error uploading file")
+    return upload_response.file_id, upload_response.url, upload_response.size
 
-def delete_online_image():
-    pass
+def delete_online_image(config: ExternalApiConfig, file_id:str):
+    imagekit = ImageKit(
+        public_key=config.api_key,
+        private_key=config.api_secret,
+        url_endpoint=config.api_url
+    )
 
-def extract_tags():
-    pass
+    result = imagekit.delete_file(file_id=file_id)
+
+    if result.response_metadata.http_status_code != 204:
+        print(f"Error deleting file {file_id}")
+        raise Exception("Error deleting file")
+    
+    return
+    
+
+def extract_tags(config:ExternalApiConfig, image_url:str, confidence:int) -> list[dict]:
+    response = requests.get(
+        f"{config.api_url}/tags?image_url={image_url}",
+        auth=(config.api_key, config.api_secret)
+    )
+
+    tags = [
+        {
+            "tag": tag["tag"]["en"],
+            "confidence": tag["confidence"]
+        }
+        for tag in response.json()["result"]["tags"]
+        if tag["confidence"] > confidence
+    ]
+
+    return tags
 

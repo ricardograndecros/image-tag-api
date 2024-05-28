@@ -1,0 +1,2 @@
+IMAGEKIT='imagekit'
+IMAGGA='imagga'

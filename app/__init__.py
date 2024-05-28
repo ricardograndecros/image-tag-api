@@ -1,30 +1,29 @@
-import os
+from pickle import GLOBAL
 from flask import Flask, appcontext_popped
-from alembic.config import Config
+from alembic.config import Config as AlembicConfig
 from alembic import command
 from sqlalchemy import create_engine, text
-from .config.config import load_config
+from .config.config import load_config, DatabaseConfig
 from . import views
 
 def create_app():
     # load config
     config = load_config()
 
-    appConfig = config['base']['app']
-
     # inject database config into alembic
-    dbConfig = appConfig['imagesDb']
-    run_migrations(dbConfig)
-
-    # migrate database
+    run_migrations(config.app.database)
 
     app = Flask(__name__)
     app.register_blueprint(views.bp)
+    app.config['config'] = config
+    with app.app_context():
+        # Create a connection to the database and store it in the Flask app context (req context)
+        app.extensions['db_engine'] = create_engine(db_connection_string(config.app.database))
 
     return app
 
 
-def run_migrations(config):
+def run_migrations(config: DatabaseConfig):
     """Runs the pending schema migration steps
 
     Args:
@@ -32,21 +31,22 @@ def run_migrations(config):
     """
 
     # Set up migrator config
-    migrationConfig = Config('alembic.ini')
-    migrationConfig.set_main_option('sqlalchemy.url', f"{config['driver']}://{config['user']}:{config['password']}@{config['host']}:{config['port']}/{config['database']}")
-    migrationConfig.set_main_option('script_location', config['alembicPath'])
+    migrationConfig = AlembicConfig('alembic.ini')
+    migrationConfig.set_main_option('sqlalchemy.url', db_connection_string(config))
+    migrationConfig.set_main_option('script_location', config.alembic_path)
     # Create a SQLAlchemy engine
     print("Database: ", migrationConfig.get_main_option('sqlalchemy.url'))
     engine = create_engine(migrationConfig.get_main_option('sqlalchemy.url'))
 
     with engine.connect() as conn:
-        command.downgrade(migrationConfig, 'base')
         print("Current revision: ", command.current(config=migrationConfig))
         print("Running pending migrations...")
         command.upgrade(migrationConfig, 'head')
         print("Finished migrating database. Current version is set to :", command.current(config=migrationConfig))
 
 
+def db_connection_string(config: DatabaseConfig):
+    return f"{config.driver}://{config.user}:{config.password}@{config.host}:{config.port}/{config.database}"
 
 # Remove when using waitress
 app = create_app()
