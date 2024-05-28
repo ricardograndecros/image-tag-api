@@ -4,12 +4,13 @@ FROM python:3.11
 # Copy the app directory into /opt/app in the Docker container
 COPY ./app /opt/app
 # Copy the database migrations into the Docker container
-COPY ./database /opt/database
+#COPY ./database /opt/database
 
-# Copy alembic.ini into /opt/ in the Docker container
-COPY ./alembic.ini /opt/alembic.ini
+# Copy configs into /opt/ in the Docker container
+#COPY alembic.ini /opt/alembic.ini
+#COPY .config.yaml /opt/app/.config.yaml
 
-# Set the working directory
+# Set working directory to /opt
 WORKDIR /opt
 
 # Install the Python dependencies
