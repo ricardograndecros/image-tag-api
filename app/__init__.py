@@ -2,8 +2,9 @@ from pickle import GLOBAL
 from flask import Flask, appcontext_popped
 from alembic.config import Config as AlembicConfig
 from alembic import command
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 from .config.config import load_config, DatabaseConfig
+from .model import db
 from . import views
 
 def create_app():
@@ -16,9 +17,10 @@ def create_app():
     app = Flask(__name__)
     app.register_blueprint(views.bp)
     app.config['config'] = config
-    with app.app_context():
-        # Create a connection to the database and store it in the Flask app context (req context)
-        app.extensions['db_engine'] = create_engine(db_connection_string(config.app.database))
+    # configure the database
+    app.config["SQLALCHEMY_DATABASE_URI"] = db_connection_string(config.app.database)
+    # initialize the app with the extension
+    db.init_app(app)
 
     return app
 
@@ -48,5 +50,4 @@ def run_migrations(config: DatabaseConfig):
 def db_connection_string(config: DatabaseConfig):
     return f"{config.driver}://{config.user}:{config.password}@{config.host}:{config.port}/{config.database}"
 
-# Remove when using waitress
 app = create_app()

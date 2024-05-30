@@ -1,6 +1,5 @@
-from ast import Tuple
 from email.mime import image
-import fileinput
+import os
 from tkinter import NO
 from typing import Union
 import requests
@@ -57,4 +56,13 @@ def extract_tags(config:ExternalApiConfig, image_url:str, confidence:int) -> lis
     ]
 
     return tags
+
+def load_image_from_file(path:str) -> str:
+    with open(path, "rb") as file:
+        content = file.read()
+    return content
+
+def get_image_size(path:str) -> int:
+    # return size in KB
+    return os.path.getsize(path) // 1024
 
