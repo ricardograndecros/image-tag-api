@@ -1,10 +1,8 @@
-from email.mime import image
 import os
 from tkinter import NO
 from typing import Union
 import requests
 from imagekitio import ImageKit
-from sqlalchemy import null
 from ..config.config import ExternalApiConfig
 
 def upload_online_image(config:ExternalApiConfig, image_name:str, image :str) -> Union[str, str, int]:

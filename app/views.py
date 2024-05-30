@@ -1,6 +1,4 @@
 from datetime import datetime
-import json
-from tkinter import NO
 from flask import Blueprint, make_response, request, current_app
 from .config.config import Config
 from . import controller

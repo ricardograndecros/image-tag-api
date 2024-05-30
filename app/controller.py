@@ -1,8 +1,6 @@
 from base64 import b64decode, b64encode
-import base64
 from copy import copy, deepcopy
 from datetime import datetime
-from operator import le
 import uuid
 from flask import current_app
 from .utils import image_utils, keys
