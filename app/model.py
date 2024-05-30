@@ -1,12 +1,10 @@
-from sqlalchemy import Column, Float, String, Text, DateTime
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy import Engine
 from flask import current_app
-
-from app.config.config import DatabaseConfig
+from sqlalchemy import Column, Float, String, Text, DateTime, func
+from sqlalchemy.ext.declarative import declarative_base
+from flask_sqlalchemy import SQLAlchemy
 
 Base = declarative_base()
+db = SQLAlchemy(model_class=Base)
 
 class Picture(Base):
     __tablename__ = 'pictures'
@@ -15,36 +13,72 @@ class Picture(Base):
     date = Column(DateTime)
 
 def add_picture(picture_id, picture_path, picture_date):
-    engine = get_engine()
-    print("engine: ", engine)
-    Session = sessionmaker(bind=engine)
-    session = Session()
-
     new_picture = Picture(
         id=picture_id,
         path=picture_path,
         date=picture_date
     )
 
-    session.add(new_picture)
+    db.session.add(new_picture)
+    db.session.commit()
+    db.session.close()
 
-    session.commit()
+def get_picture_with_tags(picture_id: str):
+    # the tag information should be formatted as a list of dictionaries [{tag: <tag>, confidence: <confidence>}]
+    picture = db.session.query(
+        Picture.id,
+        Picture.path,
+        Picture.date,
+        func.aggregate_strings(Tag.tag, ',').label('tags'),
+        func.aggregate_strings(Tag.confidence, ',').label('confidences')
+    ).filter(
+        Picture.id == picture_id
+    ).filter(
+        Picture.id == Tag.picture_id
+    ).group_by(Picture.id).first()
 
-    session.close()
+    current_app.logger.info(f"picture: {picture}")
+
+
+    db.session.close()
+
+    return picture
+
+def get_pictures_with_tags(min_date, max_date, tags):
+    # min_date and max_date are datetime objects and tags is a list of strings
+    # all can be None
+    # group by picture_id
+
+    results = db.session.query(
+        Picture.id,
+        Picture.path,
+        Picture.date,
+        func.aggregate_strings(Tag.tag, ',').label('tags'),
+        func.aggregate_strings(Tag.confidence, ',').label('confidences')
+    ).filter(
+        Picture.id == Tag.picture_id
+    ).filter(
+        Picture.date >= min_date if min_date else True
+    ).filter(
+        Picture.date <= max_date if max_date else True
+    ).filter(
+        Tag.tag.in_(tags) if tags else True
+    ).group_by(Picture.id).all()
+
+    db.session.close()
+
+    current_app.logger.info(f"results: {results}")
+
+    return results
 
 def delete_picture(picture_id: str):
-    engine = get_engine()
-    Session = sessionmaker(bind=engine)
-    session = Session()
-
-    picture = session.query(Picture).get(picture_id)
+    picture = db.session.query(Picture).get(picture_id)
 
     if picture:
-        session.delete(picture)
+        db.session.delete(picture)
+        db.session.commit()
 
-        session.commit()
-
-    session.close()
+    db.session.close()
 
 class Tag(Base):
     __tablename__ = 'tags'
@@ -54,10 +88,6 @@ class Tag(Base):
     date = Column(DateTime)
 
 def add_tag(tag_name, tag_picture_id, tag_confidence, tag_date):
-    engine = get_engine()
-    Session = sessionmaker(bind=engine)
-    session = Session()
-    
     new_tag = Tag(
         tag=tag_name,
         picture_id=tag_picture_id,
@@ -65,30 +95,30 @@ def add_tag(tag_name, tag_picture_id, tag_confidence, tag_date):
         date=tag_date
     )
 
-    session.add(new_tag)
-
-    session.commit()
-
-    session.close()
+    db.session.add(new_tag)
+    db.session.commit()
+    db.session.close()
 
 def delete_tag(tag_id: str):
-    engine = get_engine()
-    Session = sessionmaker(bind=engine)
-    session = Session()
-
-    tag = session.query(Tag).get(tag_id)
+    tag = db.session.query(Tag).get(tag_id)
 
     if tag:
-        session.delete(tag)
+        db.session.delete(tag)
+        db.session.commit()
 
-        session.commit()
+    db.session.close()
 
-    session.close()
+def get_tags(min_date, max_date):
+    results = db.session.query(
+        Tag.tag,
+        func.count(Tag.picture_id).label('n_images'),
+        func.min(Tag.confidence).label('min_confidence'),
+        func.max(Tag.confidence).label('max_confidence'),
+        func.avg(Tag.confidence).label('mean_confidence')
+    ).filter(
+        Tag.date >= min_date if min_date else True
+    ).filter(
+        Tag.date <= max_date if max_date else True
+    ).group_by(Tag.tag).all()
 
-
-def get_engine() -> Engine:
-    try:
-        engine = current_app.extensions['db_engine']
-        return engine
-    except KeyError:
-        raise Exception("Database engine not found in app context")
+    return results
