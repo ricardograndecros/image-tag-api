@@ -21,11 +21,9 @@ services:
     build: .
     ports:
       - 8080:8080
-    volumes:
-      - type: bind
-        source: .
-        target: /opt/
     depends_on:
       db:
         condition: service_healthy
+    volumes:
+      - ./image_store:/opt/image_store
     

@@ -1,5 +1,5 @@
 from pickle import GLOBAL
-from flask import Flask, appcontext_popped
+from flask import Flask
 from alembic.config import Config as AlembicConfig
 from alembic import command
 from sqlalchemy import create_engine

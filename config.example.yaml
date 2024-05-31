@@ -1,11 +1,22 @@
-base:
-  environment: dev
-  app:
-    logLevel: debug
-    imagesDb:
-      alembicPath: database/migrations
-      driver: "mysql+pymysql"
-      database: Pictures
-      host: localhost
-      port: 3306
-      user: mbit
+environment: dev
+app:
+  logLevel: debug
+  externalApis:
+    imagekit:
+      apiKey: ""
+      apiSecret: ""
+      apiUrl: "https://ik.imagekit.io/"
+    imagga:
+      apiKey: ""
+      apiSecret: ""
+      apiUrl: "https://api.imagga.com/v2"
+  database:
+    alembicPath: database/migrations
+    driver: "mysql+pymysql"
+    database: Pictures
+    host: localhost
+    port: 3306
+    user: ""
+    password: ""
+  imageStore:
+    path: image_store

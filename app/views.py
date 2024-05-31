@@ -1,4 +1,5 @@
 from datetime import datetime
+import time
 from flask import Blueprint, make_response, request, current_app
 from .config.config import Config
 from . import controller
@@ -15,6 +16,7 @@ def post_image():
     - body:
     {"data": "<base64-encoded-image-string>"} 
     """
+    current_app.logger.info(f"[POST] /image {time.time()}")
     try:
         min_confidence = int(request.args.get("min_confidence", 80))
     except:
@@ -53,6 +55,7 @@ def get_images():
             "tags": [{"tag": "<tag>", "confidence": "<confidence>"}],
         }
     """
+    current_app.logger.info(f"[GET] /images {time.time()}")
     try:
         # parse dates to datetime with the given format and tags from query params
         min_date = request.args.get("min_date", None)
@@ -94,6 +97,7 @@ def get_image(image_id):
             "data": "<base64-encoded-image-string>"
         }
     """
+    current_app.logger.info(f"[GET] /image/{image_id} {time.time()}")
     if not image_id:
         return make_response({"error": "invalid parameter value (id)"}, 400)
     
@@ -122,6 +126,7 @@ def get_tags():
             "mean_confidence": <mean confidence of the tag>
         }
     """
+    current_app.logger.info(f"[GET] /tags {time.time()}")
     try:
         # parse dates to datetime with the given format
         min_date = request.args.get("min_date", None)

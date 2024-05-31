@@ -63,11 +63,9 @@ def get_pictures_with_tags(min_date, max_date, tags):
         Picture.date <= max_date if max_date else True
     ).filter(
         Tag.tag.in_(tags) if tags else True
-    ).group_by(Picture.id).all()
+    ).group_by(Picture.id).having(func.count(Picture.id) == len(tags)).all()
 
     db.session.close()
-
-    current_app.logger.info(f"results: {results}")
 
     return results
 
