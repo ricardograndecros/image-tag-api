@@ -49,6 +49,8 @@ def get_pictures_with_tags(min_date, max_date, tags):
     # all can be None
     # group by picture_id
 
+    filter_results_num = 0 if not tags else len(tags)
+
     results = db.session.query(
         Picture.id,
         Picture.path,
@@ -63,7 +65,12 @@ def get_pictures_with_tags(min_date, max_date, tags):
         Picture.date <= max_date if max_date else True
     ).filter(
         Tag.tag.in_(tags) if tags else True
-    ).group_by(Picture.id).having(func.count(Picture.id) == len(tags)).all()
+    ).group_by(Picture.id)
+    
+    if filter_results_num: 
+        results =results.having(func.count(Picture.id) == filter_results_num)
+    
+    results.all()
 
     db.session.close()
 
