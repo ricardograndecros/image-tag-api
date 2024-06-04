@@ -6,7 +6,8 @@ An api to store images and tag them with external AI services
 
 To run the app: 
 1. Create a `.config.yaml` file with the needed values (see `config.example.yaml`)
-2. Run `docker compose up`
+2. Create a `.env` file with the needed database credentials, user and password (see `docker-compose.yml`)
+3. Run `docker compose up`
 
 
 ## Database
