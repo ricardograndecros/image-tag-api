@@ -51,6 +51,27 @@ def get_pictures_with_tags(min_date, max_date, tags):
 
     filter_results_num = 0 if not tags else len(tags)
 
+    # First, find the pictures that match the tags
+    matching_pictures = db.session.query(Picture.id).filter(
+        Picture.id == Tag.picture_id
+    ).filter(
+        Picture.date >= min_date if min_date else True
+    ).filter(
+        Picture.date <= max_date if max_date else True
+    ).filter(
+        Tag.tag.in_(tags) if tags else True
+    ).group_by(Picture.id)
+
+    if filter_results_num: 
+        matching_pictures = matching_pictures.having(func.count(Tag.tag.in_(tags)) >= filter_results_num).subquery()
+    else:
+        matching_pictures = matching_pictures.subquery()
+    
+
+    if matching_pictures is None:
+        return []
+
+    # Then, retrieve all tags associated with those pictures
     results = db.session.query(
         Picture.id,
         Picture.path,
@@ -60,17 +81,8 @@ def get_pictures_with_tags(min_date, max_date, tags):
     ).filter(
         Picture.id == Tag.picture_id
     ).filter(
-        Picture.date >= min_date if min_date else True
-    ).filter(
-        Picture.date <= max_date if max_date else True
-    ).filter(
-        Tag.tag.in_(tags) if tags else True
-    ).group_by(Picture.id)
-    
-    if filter_results_num: 
-        results =results.having(func.count(Picture.id) == filter_results_num)
-    
-    results.all()
+        Picture.id.in_(matching_pictures)
+    ).group_by(Picture.id).all()
 
     db.session.close()
 

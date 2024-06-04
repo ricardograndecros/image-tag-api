@@ -4,5 +4,6 @@ __pycache__
 *.ipynb
 database-volume/
 .config*
+.env
 image_store/
 tmp/
