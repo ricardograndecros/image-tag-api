@@ -1,4 +1,5 @@
 import yaml
+import os
 
 class DatabaseConfig:
     alembic_path:str = ""
@@ -15,8 +16,16 @@ class DatabaseConfig:
         self.database = config.get('database')
         self.host = config.get('host')
         self.port = int(config.get('port'))
-        self.user = config.get('user')
-        self.password = config.get('password')
+        self.load_from_env_variables()
+        # overwrite the values from the environment variables if they are set in the config file
+        self.user = config.get('user') if config.get('user') else self.user
+        self.password = config.get('password') if config.get('password') else self.password
+
+
+    def load_from_env_variables(self):
+        self.user = os.getenv('MYSQL_USER')
+        self.password = os.getenv('MYSQL_PASSWORD')
+
         
 class ExternalApiConfig:
     api_key:str = ""

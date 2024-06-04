@@ -7,8 +7,8 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: Pictures
-      MYSQL_USER: mbit
-      MYSQL_PASSWORD: mbit
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-u", "root", "--password=root"]
       start_period: 5s
@@ -24,6 +24,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    env_file:
+      - .env
     volumes:
       - ./image_store:/opt/image_store
-    
